@@ -1,5 +1,3 @@
-I'll help create a README.md for the Pixel Pandemonium Godot game project:
-
 ```markdown
 # Pixel Pandemonium
 
