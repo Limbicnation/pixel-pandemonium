@@ -1,7 +1,7 @@
 extends Node
 
 #region Game State
-enum GameState { MENU, PLAYING, PAUSED, GAME_OVER }
+enum GameState {MENU, PLAYING, PAUSED, GAME_OVER}
 var current_state: GameState = GameState.MENU
 #endregion
 
@@ -16,7 +16,7 @@ var crystals_collected: int = 0
 var crystals_total: int = 0
 #endregion
 
-#region Signals
+signal player_registered(player_node: PlayerController)
 signal state_changed(new_state: GameState)
 signal score_changed(new_score: int)
 signal crystal_collected(count: int, total: int)
@@ -26,15 +26,6 @@ signal game_over(won: bool)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-
-	# Wait for scene to load and verify player registration
-	await get_tree().process_frame
-	if player == null:
-		push_warning("GameManager: No player registered yet. Waiting...")
-		# Give player scene time to call register_player()
-		await get_tree().create_timer(0.1).timeout
-		if player == null:
-			push_error("GameManager: Player was never registered!")
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
@@ -74,6 +65,7 @@ func add_score(points: int) -> void:
 
 func register_player(player_node: PlayerController) -> void:
 	player = player_node
+	player_registered.emit(player)
 
 func unregister_player() -> void:
 	player = null

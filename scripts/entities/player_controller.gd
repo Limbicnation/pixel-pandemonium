@@ -141,7 +141,7 @@ func _input(event: InputEvent) -> void:
 func _handle_mouse_look(relative: Vector2) -> void:
 	look_rotation.y -= relative.x * mouse_sensitivity
 	
-	var y_multiplier := -1.0 if invert_y else 1.0
+	var y_multiplier := 1.0 if invert_y else -1.0
 	look_rotation.x -= relative.y * mouse_sensitivity * y_multiplier
 	look_rotation.x = clamp(look_rotation.x, deg_to_rad(max_look_down), deg_to_rad(max_look_up))
 	
@@ -339,21 +339,24 @@ func _spawn_muzzle_flash_light() -> void:
 	light.omni_range = 3.0
 	muzzle_pos.add_child(light)
 	
-	# Safe cleanup using a timer instead of await get_tree()
-	var timer := get_tree().create_timer(0.03)
-	timer.timeout.connect(func():
-		if is_instance_valid(light):
-			light.queue_free()
-	)
+	# Smooth fade out with tween
+	var tween := create_tween()
+	tween.tween_property(light, "light_energy", 0.0, 0.05)
+	tween.tween_callback(light.queue_free)
 
 func _spawn_impact_effect(hit_pos: Vector3, normal: Vector3) -> void:
-	var spark := CSGSphere3D.new()
-	spark.radius = 0.05
-	spark.material = StandardMaterial3D.new()
-	spark.material.albedo_color = Color(1.0, 0.8, 0.2)
-	spark.material.emission_enabled = true
-	spark.material.emission = Color(1.0, 0.6, 0.1)
-	spark.material.emission_energy = 2.0
+	var spark := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.05
+	mesh.height = 0.1
+	spark.mesh = mesh
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.8, 0.2)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.6, 0.1)
+	mat.emission_energy = 2.0
+	spark.set_surface_override_material(0, mat)
 	
 	spark.global_position = hit_pos + normal * 0.02
 	

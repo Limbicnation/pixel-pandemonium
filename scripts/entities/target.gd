@@ -4,6 +4,8 @@ extends StaticBody3D
 @onready var health: HealthComponent = $HealthComponent
 @onready var mesh: MeshInstance3D = $MeshInstance3D
 
+@export var debris_scene: PackedScene
+
 var original_color: Color
 
 func _ready() -> void:
@@ -30,60 +32,47 @@ func _flash_white() -> void:
 	await get_tree().create_timer(0.05).timeout
 	
 	if is_instance_valid(self) and mesh and mat:
-		mat.albedo_color = prev_color
+		mat.albedo_color = original_color
 
 func _on_destroyed() -> void:
 	_spawn_debris()
 	queue_free()
 
 func _spawn_debris() -> void:
+	if not debris_scene:
+		push_warning("Target: No debris scene assigned!")
+		return
+
 	var debris_count := randi_range(4, 6)
-	
+
 	for i in debris_count:
-		var debris := RigidBody3D.new()
-		debris.mass = 0.5
-		
+		var debris: RigidBody3D = debris_scene.instantiate()
 		var size := randf_range(0.1, 0.3)
-		var shape := BoxShape3D.new()
-		shape.size = Vector3(size, size, size)
-		
-		var collision := CollisionShape3D.new()
-		collision.shape = shape
-		debris.add_child(collision)
-		
-		var mesh_instance := MeshInstance3D.new()
-		var box_mesh := BoxMesh.new()
-		box_mesh.size = Vector3(size, size, size)
-		mesh_instance.mesh = box_mesh
-		
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = original_color.darkened(randf() * 0.3)
-		mesh_instance.set_surface_override_material(0, mat)
-		debris.add_child(mesh_instance)
-		
+
+		# Configure debris (assuming it has a configure method)
+		if debris.has_method("configure"):
+			debris.configure(size, original_color.darkened(randf() * 0.3))
+
 		debris.global_position = global_position + Vector3(
 			randf_range(-0.3, 0.3),
 			randf_range(0, 0.5),
 			randf_range(-0.3, 0.3)
 		)
-		
+
 		get_tree().current_scene.add_child(debris)
-		
+
 		debris.apply_central_impulse(Vector3(
 			randf_range(-2, 2),
 			randf_range(2, 5),
 			randf_range(-2, 2)
 		))
-		
+
 		debris.angular_velocity = Vector3(
 			randf_range(-5, 5),
 			randf_range(-5, 5),
 			randf_range(-5, 5)
 		)
-		
-		_remove_debris_after_delay(debris)
 
 func _remove_debris_after_delay(debris: RigidBody3D) -> void:
-	await get_tree().create_timer(3.0).timeout
-	if is_instance_valid(debris):
-		debris.queue_free()
+	# Handled by debris script cleanup
+	pass

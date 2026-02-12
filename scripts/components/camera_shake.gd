@@ -6,7 +6,7 @@ extends Node3D
 @export var max_roll: float = 0.1
 
 var shake_strength: float = 0.0
-var trauma: float = 0.0  ## 0-1 trauma system for more natural decay
+var trauma: float = 0.0 ## 0-1 trauma system for more natural decay
 var initial_position: Vector3 = Vector3.ZERO
 var noise: FastNoiseLite
 
@@ -21,7 +21,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if trauma > 0:
 		# Decay trauma exponentially (feels more natural)
-		trauma = max(0.0, trauma - shake_decay * delta * trauma)
+		trauma = lerpf(trauma, 0.0, 1.0 - exp(-shake_decay * delta))
 		
 		# Calculate shake amount (quadratic for more impact at high trauma)
 		var shake_amount := trauma * trauma
