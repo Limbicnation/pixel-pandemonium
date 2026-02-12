@@ -140,8 +140,8 @@ func _input(event: InputEvent) -> void:
 
 func _handle_mouse_look(relative: Vector2) -> void:
 	look_rotation.y -= relative.x * mouse_sensitivity
-	
-	var y_multiplier := 1.0 if invert_y else -1.0
+
+	var y_multiplier := -1.0 if invert_y else 1.0
 	look_rotation.x -= relative.y * mouse_sensitivity * y_multiplier
 	look_rotation.x = clamp(look_rotation.x, deg_to_rad(max_look_down), deg_to_rad(max_look_up))
 	
